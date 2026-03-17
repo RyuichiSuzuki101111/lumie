@@ -93,10 +93,10 @@ class Symbol:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Symbol):
             return NotImplemented
-        return self.uid == other.uid and self.context_uid == other.context_uid
+        return self.uid == other.uid
 
     def __hash__(self) -> int:
-        return hash((self.uid, self.context_uid))
+        return hash(self.uid)
 
     def __str__(self) -> str:
         return self.name
