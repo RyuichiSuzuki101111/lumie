@@ -6,17 +6,17 @@ from weakref import WeakValueDictionary
 
 from lumie.constants import LUMIE_NAMESPACE
 
-SYMBOL_NAMESPACE = uuid5(LUMIE_NAMESPACE, "symbol")
+SYMBOL_NAMESPACE = uuid5(LUMIE_NAMESPACE, 'symbol')
 
 
 class Symbol:
-    _NAMESPACE: ClassVar[UUID] = uuid5(SYMBOL_NAMESPACE, "Symbol")
+    _NAMESPACE: ClassVar[UUID] = uuid5(SYMBOL_NAMESPACE, 'Symbol')
     _LOCK: ClassVar[RLock] = RLock()
     _instances: ClassVar[WeakValueDictionary[tuple[str, UUID | None], Self]] = (
         WeakValueDictionary()
     )
 
-    __slots__ = ("name", "uid", "namespace", "context_uid")
+    __slots__ = ('context_uid', 'name', 'namespace', 'uid')
     context_uid: UUID | None = None
     namespace: UUID
     name: str
@@ -55,10 +55,10 @@ class Symbol:
                 return symbol
 
             symbol = super().__new__(cls)
-            object.__setattr__(symbol, "name", name)
-            object.__setattr__(symbol, "uid", uid)
-            object.__setattr__(symbol, "namespace", namespace)
-            object.__setattr__(symbol, "context_uid", context_uid)
+            object.__setattr__(symbol, 'name', name)
+            object.__setattr__(symbol, 'uid', uid)
+            object.__setattr__(symbol, 'namespace', namespace)
+            object.__setattr__(symbol, 'context_uid', context_uid)
             cls._instances[(name, context_uid)] = symbol
         symbol.validate_uid()
         return symbol
@@ -79,16 +79,16 @@ class Symbol:
                 else cls._NAMESPACE
             )
             uid_ = uuid5(namespace, name)
-            object.__setattr__(symbol, "name", name)
-            object.__setattr__(symbol, "uid", uid_)
-            object.__setattr__(symbol, "namespace", namespace)
-            object.__setattr__(symbol, "context_uid", context_uid)
+            object.__setattr__(symbol, 'name', name)
+            object.__setattr__(symbol, 'uid', uid_)
+            object.__setattr__(symbol, 'namespace', namespace)
+            object.__setattr__(symbol, 'context_uid', context_uid)
             cls._instances[(name, context_uid)] = symbol
 
         return symbol
 
     def __setattr__(self, key: str, value: Any) -> None:
-        raise AttributeError("Symbol instances are immutable")
+        raise AttributeError('Symbol instances are immutable')
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Symbol):
@@ -102,7 +102,7 @@ class Symbol:
         return self.name
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name!r}, context_uid={self.context_uid!r})"
+        return f'{self.__class__.__name__}({self.name!r}, context_uid={self.context_uid!r})'
 
     def __reduce__(
         self,
