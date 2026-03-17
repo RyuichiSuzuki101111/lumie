@@ -1,3 +1,4 @@
+# lumie/symbol/symbol.py
 from threading import RLock
 from typing import Any, ClassVar, Self
 from uuid import UUID, uuid5
