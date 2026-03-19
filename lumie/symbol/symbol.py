@@ -20,6 +20,7 @@ class Symbol:
 
     @classmethod
     def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
         cls._NAMESPACE = uuid5(SYMBOL_NAMESPACE, cls.__name__)
         cls._instances = WeakValueDictionary()
 
