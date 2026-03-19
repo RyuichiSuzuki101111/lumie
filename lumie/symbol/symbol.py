@@ -24,38 +24,23 @@ class Symbol:
         cls._NAMESPACE = uuid5(SYMBOL_NAMESPACE, cls.__name__)
         cls._instances = WeakValueDictionary()
 
-    def validate_uid(self) -> None:
-        expected_uid = uuid5(self._NAMESPACE, self.name)
-        if self.uid != expected_uid:
-            raise ValueError(
-                f"UID {self.uid} does not match the expected UID {expected_uid} for name '{self.name}'"
-            )
-
-    @classmethod
-    def _create_with_full_attrs(cls, name: str, uid: UUID) -> Self:
-        if (symbol := cls._instances.get(name)) is not None:
-            return symbol
-
+    def __new__(cls, name: str, *, uid: UUID | None = None) -> Self:
         with cls._LOCK:
-            if (symbol := cls._instances.get(name)) is not None:
-                return symbol
-
-            symbol = super().__new__(cls)
-            object.__setattr__(symbol, 'name', name)
-            object.__setattr__(symbol, 'uid', uid)
-            cls._instances[name] = symbol
-        symbol.validate_uid()
-        return symbol
-
-    def __new__(cls, name: str) -> Self:
-        with cls._LOCK:
+            expected_uid = uuid5(cls._NAMESPACE, name)
             if symbol := cls._instances.get(name):
+                if symbol.uid != expected_uid:
+                    msg = f"Existing symbol with name '{name}' has UID {symbol.uid}, which does not match the expected UID {expected_uid}"
+                    raise ValueError(msg)
                 return symbol
 
-            symbol = super().__new__(cls)
-            uid_ = uuid5(cls._NAMESPACE, name)
+            if uid is not None and uid != expected_uid:
+                msg = f"Provided UID {uid} does not match the expected UID {expected_uid} for name '{name}'"
+                raise ValueError(msg)
+
+            symbol = object.__new__(cls)
+            final_uid = uid or expected_uid
             object.__setattr__(symbol, 'name', name)
-            object.__setattr__(symbol, 'uid', uid_)
+            object.__setattr__(symbol, 'uid', final_uid)
             cls._instances[name] = symbol
 
         return symbol
@@ -77,7 +62,5 @@ class Symbol:
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.name!r})'
 
-    def __reduce__(
-        self,
-    ) -> Any:
-        return (type(self)._create_with_full_attrs, (self.name, self.uid))
+    def __reduce__(self) -> tuple[type, tuple[str, UUID]]:
+        return (self.__class__, (self.name, self.uid))
