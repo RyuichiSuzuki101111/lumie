@@ -85,6 +85,14 @@ class QVector(Generic[S]):
         # zero の表現はimplによっては状態を持つかもしれないので毎回implから取得するようにする
         return cls._with_vector(cls.impl.zero())
 
+    @classmethod
+    def unit_vector(cls, symbol: S) -> Self:
+        if symbol not in cls.symbol_index:
+            msg = f'Symbol {symbol!r} is not in symbol_index'
+            raise ValueError(msg)
+        index = cls.symbol_index[symbol]
+        return cls._with_vector(cls.impl.unit_vector(index))
+
     def __add__(self, other: Self) -> Self:
         if type(self) is not type(other):
             return NotImplemented
