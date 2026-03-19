@@ -24,7 +24,6 @@ class QVector(Generic[S]):
     # We use `Any` here and rely on __init_subclass__ to enforce correctness.
     symbol_index: ClassVar[Mapping[Any, int]]
     context_uid: ClassVar[UUID]
-    zero: ClassVar[Any]
 
     @classmethod
     def __init_subclass__(
@@ -55,7 +54,6 @@ class QVector(Generic[S]):
                 )
 
         cls.symbol_index = MappingProxyType(symbol_index)
-        cls.zero = cls._with_vector(cls.impl.zero)
 
     def __init__(
         self,
@@ -79,6 +77,11 @@ class QVector(Generic[S]):
             for index, value in self.impl.vector_to_dict(self._vector).items()
             if value != (0, 1)
         }
+
+    @classmethod
+    def zero(cls) -> Self:
+        # zero の表現はimplによっては状態を持つかもしれないので毎回implから取得するようにする
+        return cls._with_vector(cls.impl.zero())
 
     def __add__(self, other: Self) -> Self:
         if type(self) is not type(other):
