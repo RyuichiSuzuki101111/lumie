@@ -40,20 +40,17 @@ class QVector(Generic[S]):
         symbol_types = {type(symbol) for symbol in symbol_index}
 
         if len(symbol_types) != 1:
-            raise TypeError(
-                f'All symbols in symbol_index must be of the same type, got {symbol_types}'
-            )
+            msg = f'All symbols in symbol_index must be of the same type, got {symbol_types}'
+            raise TypeError(msg)
         cls.symbol_type = next(iter(symbol_types))
 
         for symbol, index in symbol_index.items():
             if not isinstance(symbol, cls.symbol_type):
-                raise TypeError(
-                    f'Symbol index keys must be of type {cls.symbol_type}, got {symbol!r} of type {type(symbol)}'
-                )
+                msg = f'Symbol index keys must be of type {cls.symbol_type}, got {symbol!r} of type {type(symbol)}'
+                raise TypeError(msg)
             if not isinstance(index, int):
-                raise TypeError(
-                    f'Symbol index values must be of type int, got {index!r} of type {type(index)}'
-                )
+                msg = f'Symbol index values must be of type int, got {index!r} of type {type(index)}'
+                raise TypeError(msg)
 
         cls.symbol_index = MappingProxyType(symbol_index)
 
