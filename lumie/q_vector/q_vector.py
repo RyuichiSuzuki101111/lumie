@@ -31,7 +31,9 @@ class QVector(Generic[S]):
         context_uid: UUID,
         impl: QVectorImpl[Any],
         symbol_index: dict[S, int],
+        **kwargs: Any,
     ) -> None:
+        super().__init_subclass__(**kwargs)
         cls.context_uid = context_uid
         cls.impl = impl
         symbol_index = dict(symbol_index)
