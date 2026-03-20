@@ -1,4 +1,6 @@
 # lumie/symbol/symbol.py
+from __future__ import annotations
+
 from threading import RLock
 from typing import Any, ClassVar
 from uuid import UUID, uuid5
@@ -8,10 +10,12 @@ from typing_extensions import Self
 
 from lumie.constants import LUMIE_NAMESPACE
 
+from .term import _TermMixIn
+
 SYMBOL_NAMESPACE = uuid5(LUMIE_NAMESPACE, 'symbol')
 
 
-class Symbol:
+class Symbol(_TermMixIn['Symbol']):
     _NAMESPACE: ClassVar[UUID] = uuid5(SYMBOL_NAMESPACE, 'Symbol')
     _LOCK: ClassVar[RLock] = RLock()
     _instances: ClassVar[WeakValueDictionary[str, Self]] = WeakValueDictionary()
@@ -62,7 +66,7 @@ class Symbol:
         return self.name
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.name!r})'
+        return f'{type(self).__name__}({self.name!r})'
 
     def __reduce__(self) -> tuple[type, tuple[str, UUID]]:
-        return (self.__class__, (self.name, self.uid))
+        return (type(self), (self.name, self.uid))
