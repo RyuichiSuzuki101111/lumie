@@ -29,16 +29,24 @@ class QVector(Generic[S]):
     symbol_index: ClassVar[Mapping[Any, int]]
     # The inverse mapping of symbol_index, from indices to symbols.
     index_symbol: ClassVar[Mapping[int, Any]]
+    is_template: ClassVar[bool] = True
 
     @classmethod
     def __init_subclass__(
         cls,
-        impl: QVectorImpl[Any],
-        symbol_index: dict[S, int],
+        impl: QVectorImpl[Any] | None = None,
+        symbol_index: dict[S, int] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init_subclass__(**kwargs)
-        cls.impl = impl
+
+        if (impl is None) != (symbol_index is None):
+            msg = 'Both impl and symbol_index must be provided together'
+            raise ValueError(msg)
+
+        if (impl is None) or (symbol_index is None):
+            return
+
         symbol_index = dict(symbol_index)
         symbol_types = {type(symbol) for symbol in symbol_index}
 
@@ -61,8 +69,10 @@ class QVector(Generic[S]):
                 msg = f'Index {index} is assigned to multiple symbols: {symbol!r} and {index_symbol[index]!r}'
                 raise ValueError(msg)
 
+        cls.impl = impl
         cls.symbol_index = MappingProxyType(symbol_index)
         cls.index_symbol = MappingProxyType(index_symbol)
+        cls.is_template = False
 
     def __init__(
         self,
