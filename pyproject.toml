@@ -23,6 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
 ]
+dependencies = [
+    "typing_extensions>=4.8.0", # Backport for typing features (e.g. Self) on Python 3.10
+]
 
 [project.urls]
 Homepage = "https://github.com/RyuichiSuzuki101111/lumie"
