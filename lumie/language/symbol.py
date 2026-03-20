@@ -28,7 +28,7 @@ class Symbol(TermMixIn['Symbol']):
     uid: UUID
 
     @classmethod
-    def __init_subclass__(cls, **kwargs: Any) -> None:
+    def __init_subclass__(cls, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init_subclass__(**kwargs)
         cls._NAMESPACE = uuid5(SYMBOL_NAMESPACE, cls.__name__)
         cls._instances = WeakValueDictionary()
@@ -54,7 +54,7 @@ class Symbol(TermMixIn['Symbol']):
 
         return symbol
 
-    def __setattr__(self, key: str, value: Any) -> None:
+    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
         msg = 'Symbol instances are immutable'
         raise AttributeError(msg)
 
