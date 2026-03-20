@@ -1,15 +1,17 @@
 # lumie/q_vector/q_vector.py
 from __future__ import annotations
 
-from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
 from typing_extensions import Self
 
 from lumie.language import Symbol
 
-from .q_vector_impl import QVectorImpl
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from .q_vector_impl import QVectorImpl
 
 S = TypeVar('S', bound=Symbol)
 
@@ -36,7 +38,7 @@ class QVector(Generic[S]):
         cls,
         impl: QVectorImpl[Any] | None = None,
         symbol_index: dict[S, int] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init_subclass__(**kwargs)
 
@@ -104,7 +106,7 @@ class QVector(Generic[S]):
         self._vector = self.impl.dict_to_vector(resolved_expr)
 
     @classmethod
-    def _with_vector(cls, vector: Any) -> Self:
+    def _with_vector(cls, vector: Any) -> Self:  # noqa: ANN401
         instance = cls.__new__(cls)
         instance._vector = vector
         return instance
