@@ -1,9 +1,8 @@
 # lumie/symbol/symbol.py
 from __future__ import annotations
 
-from collections.abc import Callable
 from threading import RLock
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 from uuid import UUID, uuid5
 from weakref import WeakValueDictionary
 
@@ -12,6 +11,9 @@ from typing_extensions import Self
 from lumie.constants import LUMIE_NAMESPACE
 
 from .term import TermMixIn
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 SYMBOL_NAMESPACE = uuid5(LUMIE_NAMESPACE, 'symbol')
 
@@ -53,7 +55,8 @@ class Symbol(TermMixIn['Symbol']):
         return symbol
 
     def __setattr__(self, key: str, value: Any) -> None:
-        raise AttributeError('Symbol instances are immutable')
+        msg = 'Symbol instances are immutable'
+        raise AttributeError(msg)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Symbol):
