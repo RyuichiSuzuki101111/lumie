@@ -1,6 +1,7 @@
 # lumie/symbol/symbol.py
 from __future__ import annotations
 
+from collections.abc import Callable
 from threading import RLock
 from typing import Any, ClassVar
 from uuid import UUID, uuid5
@@ -68,5 +69,9 @@ class Symbol(TermMixIn['Symbol']):
     def __repr__(self) -> str:
         return f'{type(self).__name__}({self.name!r})'
 
-    def __reduce__(self) -> tuple[type, tuple[str, UUID]]:
-        return (type(self), (self.name, self.uid))
+    @classmethod
+    def _reconstruct(cls, name: str, uid: UUID) -> Self:
+        return cls(name, uid=uid)
+
+    def __reduce__(self) -> tuple[Callable[..., Self], tuple[str, UUID]]:
+        return (type(self)._reconstruct, (self.name, self.uid))
