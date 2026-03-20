@@ -26,7 +26,7 @@ class Term(Protocol[S]):
     def __eq__(self, other: object) -> bool: ...
 
 
-class _TermMixIn(Generic[S]):
+class TermMixIn(Generic[S]):
     def __mul__(self, other: Term[S]) -> Mul[S]:
         return Mul(self, other)
 
@@ -52,7 +52,7 @@ class _TermMixIn(Generic[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class EmptyTerm(Generic[S], _TermMixIn[S]):
+class EmptyTerm(Generic[S], TermMixIn[S]):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, EmptyTerm):
             return NotImplemented
@@ -60,7 +60,7 @@ class EmptyTerm(Generic[S], _TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Mul(Generic[S], _TermMixIn[S]):
+class Mul(Generic[S], TermMixIn[S]):
     lhs: Term[S]
     rhs: Term[S]
 
@@ -71,7 +71,7 @@ class Mul(Generic[S], _TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Div(Generic[S], _TermMixIn[S]):
+class Div(Generic[S], TermMixIn[S]):
     lhs: Term[S]
     rhs: Term[S]
 
@@ -82,7 +82,7 @@ class Div(Generic[S], _TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Pow(Generic[S], _TermMixIn[S]):
+class Pow(Generic[S], TermMixIn[S]):
     base: Term[S]
     exponent_num: int
     exponent_den: int = 1
@@ -98,7 +98,7 @@ class Pow(Generic[S], _TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Invert(Generic[S], _TermMixIn[S]):
+class Invert(Generic[S], TermMixIn[S]):
     term: Term[S]
 
     def __eq__(self, other: object) -> bool:
@@ -108,7 +108,7 @@ class Invert(Generic[S], _TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Alias(Generic[S], _TermMixIn[S]):
+class Alias(Generic[S], TermMixIn[S]):
     name: str
     target: Term[S]
 

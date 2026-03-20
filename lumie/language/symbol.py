@@ -10,12 +10,12 @@ from typing_extensions import Self
 
 from lumie.constants import LUMIE_NAMESPACE
 
-from .term import _TermMixIn
+from .term import TermMixIn
 
 SYMBOL_NAMESPACE = uuid5(LUMIE_NAMESPACE, 'symbol')
 
 
-class Symbol(_TermMixIn['Symbol']):
+class Symbol(TermMixIn['Symbol']):
     _NAMESPACE: ClassVar[UUID] = uuid5(SYMBOL_NAMESPACE, 'Symbol')
     _LOCK: ClassVar[RLock] = RLock()
     _instances: ClassVar[WeakValueDictionary[str, Self]] = WeakValueDictionary()
