@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any, ClassVar, Generic, Self, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
+
+from typing_extensions import Self
 
 from lumie.symbol import Symbol
 
