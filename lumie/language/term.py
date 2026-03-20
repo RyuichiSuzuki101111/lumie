@@ -54,6 +54,8 @@ class TermMixIn(Generic[S]):
 @dataclass(frozen=True, slots=True)
 class EmptyTerm(Generic[S], TermMixIn[S]):
     def __eq__(self, value: object) -> bool:
+        if self is value:
+            return True
         if not isinstance(value, EmptyTerm):
             return NotImplemented
         return True
@@ -65,6 +67,8 @@ class Mul(Generic[S], TermMixIn[S]):
     rhs: Term[S]
 
     def __eq__(self, other: object) -> bool:
+        if self is other:
+            return True
         if not isinstance(other, Mul):
             return NotImplemented
         return self.lhs == other.lhs and self.rhs == other.rhs
@@ -76,6 +80,8 @@ class Div(Generic[S], TermMixIn[S]):
     rhs: Term[S]
 
     def __eq__(self, other: object) -> bool:
+        if self is other:
+            return True
         if not isinstance(other, Div):
             return NotImplemented
         return self.lhs == other.lhs and self.rhs == other.rhs
@@ -88,6 +94,8 @@ class Pow(Generic[S], TermMixIn[S]):
     exponent_den: int = 1
 
     def __eq__(self, other: object) -> bool:
+        if self is other:
+            return True
         if not isinstance(other, Pow):
             return NotImplemented
         return (
@@ -102,6 +110,8 @@ class Invert(Generic[S], TermMixIn[S]):
     term: Term[S]
 
     def __eq__(self, other: object) -> bool:
+        if self is other:
+            return True
         if not isinstance(other, Invert):
             return NotImplemented
         return self.term == other.term
@@ -113,6 +123,8 @@ class Alias(Generic[S], TermMixIn[S]):
     target: Term[S]
 
     def __eq__(self, other: object) -> bool:
+        if self is other:
+            return True
         if not isinstance(other, Alias):
             return NotImplemented
         return self.name == other.name and self.target == other.target
