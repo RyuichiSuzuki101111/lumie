@@ -108,6 +108,13 @@ class QVector(Generic[S]):
         result_vector = self.impl.neg(self._vector)
         return type(self)._with_vector(result_vector)
 
+    def __eq__(self, other: object) -> bool:
+        if type(self) is not type(other):
+            return NotImplemented
+        # Help type checkers understand both operands share the same impl.
+        assert isinstance(other, type(self))
+        return self.impl.eq(self._vector, other._vector)
+
     def scalar_mul(self, scalar_num: int, scalar_den: int) -> Self:
         result_vector = self.impl.scalar_mul(self._vector, scalar_num, scalar_den)
         return type(self)._with_vector(result_vector)
