@@ -1,8 +1,10 @@
 # lumie/symbol/symbol.py
 from threading import RLock
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar
 from uuid import UUID, uuid5
 from weakref import WeakValueDictionary
+
+from typing_extensions import Self
 
 from lumie.constants import LUMIE_NAMESPACE
 
