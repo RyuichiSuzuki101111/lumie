@@ -23,7 +23,12 @@ class QVector(Generic[S]):
     # Ideally this should be `ClassVar[Mapping[S, int]]`, but Python's type system
     # does not allow using class-level generics (S) in ClassVar in a sound way.
     # We use `Any` here and rely on __init_subclass__ to enforce correctness.
+
+    # A mapping from symbol to indices (or ordinals of coordinates) in the vector representation.
+    # This is used to convert between the user-facing symbol-based representation and the internal vector representation.
     symbol_index: ClassVar[Mapping[Any, int]]
+    # The inverse mapping of symbol_index, from indices to symbols.
+    index_symbol: ClassVar[Mapping[int, Any]]
 
     @classmethod
     def __init_subclass__(
@@ -42,6 +47,9 @@ class QVector(Generic[S]):
             raise TypeError(msg)
         cls.symbol_type = next(iter(symbol_types))
 
+        index_symbol: dict[int, S] = {}
+
+        # check the symbol_index and build the inverse mapping at the same time
         for symbol, index in symbol_index.items():
             if not isinstance(symbol, cls.symbol_type):
                 msg = f'Symbol index keys must be of type {cls.symbol_type}, got {symbol!r} of type {type(symbol)}'
@@ -49,8 +57,12 @@ class QVector(Generic[S]):
             if not isinstance(index, int):
                 msg = f'Symbol index values must be of type int, got {index!r} of type {type(index)}'
                 raise TypeError(msg)
+            if index_symbol.setdefault(index, symbol) is not symbol:
+                msg = f'Index {index} is assigned to multiple symbols: {symbol!r} and {index_symbol[index]!r}'
+                raise ValueError(msg)
 
         cls.symbol_index = MappingProxyType(symbol_index)
+        cls.index_symbol = MappingProxyType(index_symbol)
 
     def __init__(
         self,
@@ -68,12 +80,14 @@ class QVector(Generic[S]):
         return instance
 
     def to_dict(self) -> dict[S, tuple[int, int]]:
-        inverse_index = {i: s for s, i in self.symbol_index.items()}
-        return {
-            inverse_index[index]: value
-            for index, value in self.impl.vector_to_dict(self._vector).items()
-            if value != (0, 1)
-        }
+        result: dict[S, tuple[int, int]] = {}
+
+        for index, value in self.impl.vector_to_dict(self._vector).items():
+            if value != (0, 1):
+                symbol = self.index_symbol[index]
+                result[symbol] = value
+
+        return result
 
     @classmethod
     def zero(cls) -> Self:
