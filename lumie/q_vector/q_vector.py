@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any, ClassVar, Generic, TypeVar
-from uuid import UUID
 
 from typing_extensions import Self
 
@@ -25,18 +24,15 @@ class QVector(Generic[S]):
     # does not allow using class-level generics (S) in ClassVar in a sound way.
     # We use `Any` here and rely on __init_subclass__ to enforce correctness.
     symbol_index: ClassVar[Mapping[Any, int]]
-    context_uid: ClassVar[UUID]
 
     @classmethod
     def __init_subclass__(
         cls,
-        context_uid: UUID,
         impl: QVectorImpl[Any],
         symbol_index: dict[S, int],
         **kwargs: Any,
     ) -> None:
         super().__init_subclass__(**kwargs)
-        cls.context_uid = context_uid
         cls.impl = impl
         symbol_index = dict(symbol_index)
         symbol_types = {type(symbol) for symbol in symbol_index}
