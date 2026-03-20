@@ -68,9 +68,25 @@ class QVector(Generic[S]):
         self,
         expr: dict[S, tuple[int, int]],
     ) -> None:
-        resolved_expr = {
-            self.symbol_index[symbol]: value for symbol, value in expr.items()
-        }
+        resolved_expr: dict[int, tuple[int, int]] = {}
+
+        for symbol, value in expr.items():
+            if symbol not in self.symbol_index:
+                msg = f'Symbol {symbol!r} is not in symbol_index'
+                raise ValueError(msg)
+
+            index = self.symbol_index[symbol]
+
+            if not isinstance(value, tuple) or len(value) != 2:
+                msg = f'Value for symbol {symbol!r} must be a tuple of (numerator, denominator), got {value!r}'
+                raise ValueError(msg)
+
+            if not all(isinstance(x, int) for x in value):
+                msg = f'Value for symbol {symbol!r} must be a tuple of (numerator, denominator) where both are int, got {value!r}'
+                raise ValueError(msg)
+
+            resolved_expr[index] = value
+
         self._vector = self.impl.dict_to_vector(resolved_expr)
 
     @classmethod
