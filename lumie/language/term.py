@@ -1,7 +1,7 @@
 # lumie/language/_term.py
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
 
 if TYPE_CHECKING:
@@ -18,10 +18,9 @@ class Term(Protocol[S]):
     def invert(self) -> Term[S]: ...
     def rational_power(self, exp_num: int, exp_den: int) -> Pow[S]: ...
     def alias(self, name: str) -> Alias[S]: ...
-    @classmethod
-    def empty(cls) -> EmptyTerm[S]: ...
 
-    # Because Term is not interested in the semantics of terms, two terms are considered equal if they have the same construction tree.
+    def __hash__(self) -> int: ...
+    # Because the interest of Term is its form, not its semantics, two terms are considered equal if they have the same construction tree.
     # For example, (s * t) and (t * s) are not equal even if s and t are the same symbol.
     def __eq__(self, other: object) -> bool: ...
 
@@ -45,26 +44,53 @@ class TermMixIn(Generic[S]):
     def alias(self, name: str) -> Alias[S]:
         return Alias(name, self)
 
-    @classmethod
-    def empty(cls) -> EmptyTerm[S]:
-        # 例えば Div(s, s) のような Term の reduce 結果として EmptyTerm が必要になることがある。
-        return EmptyTerm()
+    def __eq__(self, other: object) -> bool:
+        raise NotImplementedError('Subclasses of TermMixIn must implement __eq__')
+
+
+class _CachedHash:
+    # Subclass should have a _hash field of type int | None with default value None,
+    # and implement _compute_hash method to compute the hash value when _hash is None.
+    _hash: int | None
+
+    def _compute_hash(self) -> int:
+        raise NotImplementedError(
+            'Subclasses of _CachedHash must implement _compute_hash'
+        )
+
+    def __hash__(self) -> int:
+        if self._hash is None:
+            hash_value = self._compute_hash()
+            # Since the class is frozen, we need to use object.__setattr__ to set the _hash attribute.
+            object.__setattr__(self, '_hash', hash_value)
+        assert self._hash is not None
+        return self._hash
 
 
 @dataclass(frozen=True, slots=True)
-class EmptyTerm(Generic[S], TermMixIn[S]):
+class EmptyTerm(Generic[S], TermMixIn[S], _CachedHash):
+    symbol_type: type[S]
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self) -> int:
+        return hash((type(self), self.symbol_type))
+
     def __eq__(self, value: object) -> bool:
         if self is value:
             return True
         if not isinstance(value, EmptyTerm):
             return NotImplemented
-        return True
+        return self.symbol_type == value.symbol_type
 
 
 @dataclass(frozen=True, slots=True)
-class Mul(Generic[S], TermMixIn[S]):
+class Mul(Generic[S], TermMixIn[S], _CachedHash):
     lhs: Term[S]
     rhs: Term[S]
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self):
+        return hash((type(self), self.lhs, self.rhs))
 
     def __eq__(self, other: object) -> bool:
         if self is other:
@@ -75,9 +101,13 @@ class Mul(Generic[S], TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Div(Generic[S], TermMixIn[S]):
+class Div(Generic[S], TermMixIn[S], _CachedHash):
     lhs: Term[S]
     rhs: Term[S]
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self):
+        return hash((type(self), self.lhs, self.rhs))
 
     def __eq__(self, other: object) -> bool:
         if self is other:
@@ -88,10 +118,14 @@ class Div(Generic[S], TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Pow(Generic[S], TermMixIn[S]):
+class Pow(Generic[S], TermMixIn[S], _CachedHash):
     base: Term[S]
     exponent_num: int
     exponent_den: int = 1
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self):
+        return hash((type(self), self.base, self.exponent_num, self.exponent_den))
 
     def __eq__(self, other: object) -> bool:
         if self is other:
@@ -106,8 +140,12 @@ class Pow(Generic[S], TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Invert(Generic[S], TermMixIn[S]):
+class Invert(Generic[S], TermMixIn[S], _CachedHash):
     term: Term[S]
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self) -> int:
+        return hash((type(self), self.term))
 
     def __eq__(self, other: object) -> bool:
         if self is other:
@@ -118,9 +156,13 @@ class Invert(Generic[S], TermMixIn[S]):
 
 
 @dataclass(frozen=True, slots=True)
-class Alias(Generic[S], TermMixIn[S]):
+class Alias(Generic[S], TermMixIn[S], _CachedHash):
     name: str
     target: Term[S]
+    _hash: int | None = field(init=False, repr=False, default=None)
+
+    def _compute_hash(self) -> int:
+        return hash((type(self), self.name, self.target))
 
     def __eq__(self, other: object) -> bool:
         if self is other:
