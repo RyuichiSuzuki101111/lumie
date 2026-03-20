@@ -91,6 +91,8 @@ def assert_q_vector_impl(obj: object) -> QVectorImpl[Any]:
             parts.append(f'missing: {", ".join(missing)}')
         if invalid:
             parts.append('not callable: ' + ', '.join(f'{k} ({t})' for k, t in invalid))
-        raise TypeError(f'{obj!r} is not a valid QVectorImpl ({"; ".join(parts)})')
+        detail = '; '.join(parts)
+        msg = f'{obj!r} is not a valid QVectorImpl ({detail})'
+        raise TypeError(msg)
 
     return obj  # type: ignore
