@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, TypeVar
 
-from lumie.symbol import Symbol
+from lumie.language import Symbol
 
 S = TypeVar('S', bound=Symbol)
 V = TypeVar('V')

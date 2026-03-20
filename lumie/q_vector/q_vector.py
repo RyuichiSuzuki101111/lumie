@@ -7,7 +7,7 @@ from typing import Any, ClassVar, Generic, TypeVar
 
 from typing_extensions import Self
 
-from lumie.symbol import Symbol
+from lumie.language import Symbol
 
 from .q_vector_impl import QVectorImpl
 
