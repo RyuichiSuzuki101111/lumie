@@ -13,7 +13,7 @@ S = TypeVar('S', bound='Symbol')
 
 
 class Language(Generic[S]):
-    def __init__(self, symbol_type: type[S]):
+    def __init__(self, symbol_type: type[S]) -> None:
         self.symbol_type = symbol_type
         self._lock: RLock = RLock()
         self._names: set[str] = set()
