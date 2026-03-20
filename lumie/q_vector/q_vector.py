@@ -78,6 +78,10 @@ class QVector(Generic[S]):
         self,
         expr: dict[S, tuple[int, int]],
     ) -> None:
+        if self.is_template:
+            msg = f'Cannot instantiate a template {type(self).__name__}. Please subclass QVector with a specific impl and symbol_index.'
+            raise TypeError(msg)
+
         resolved_expr: dict[int, tuple[int, int]] = {}
 
         for symbol, value in expr.items():
@@ -117,11 +121,17 @@ class QVector(Generic[S]):
 
     @classmethod
     def zero(cls) -> Self:
+        if cls.is_template:
+            msg = f'Cannot call zero() on a template {cls.__name__}. Please subclass QVector with a specific impl and symbol_index.'
+            raise TypeError(msg)
         # zero の表現はimplによっては状態を持つかもしれないので毎回implから取得するようにする
         return cls._with_vector(cls.impl.zero())
 
     @classmethod
     def unit_vector(cls, symbol: S) -> Self:
+        if cls.is_template:
+            msg = f'Cannot call unit_vector() on a template {cls.__name__}. Please subclass QVector with a specific impl and symbol_index.'
+            raise TypeError(msg)
         if symbol not in cls.symbol_index:
             msg = f'Symbol {symbol!r} is not in symbol_index'
             raise ValueError(msg)
