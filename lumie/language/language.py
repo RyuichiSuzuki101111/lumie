@@ -39,6 +39,14 @@ class Language(Generic[S]):
             self._names.add(symbol.name)
             self._symbols[symbol.name] = symbol
 
+    def get_symbol(self, name: str) -> S:
+        with self._lock:
+            if name in self._symbols:
+                return self._symbols[name]
+
+            msg = f'No symbol with name {name!r} found in the language'
+            raise ValueError(msg)
+
     def add_alias(self, alias: Alias[S]) -> None:
         with self._lock:
             if not isinstance(alias, Alias):
@@ -48,10 +56,28 @@ class Language(Generic[S]):
                 msg = 'Cannot add alias to a frozen language'
                 raise ValueError(msg)
             if alias.name in self._names:
-                msg = f'Symbol name {alias.name!r} already exists in the language'
+                msg = f'Alias name {alias.name!r} already exists in the language'
                 raise ValueError(msg)
             self._names.add(alias.name)
             self._aliases[alias.name] = alias
+
+    def get_alias(self, name: str) -> Alias[S]:
+        with self._lock:
+            if name in self._aliases:
+                return self._aliases[name]
+
+            msg = f'No alias with name {name!r} found in the language'
+            raise ValueError(msg)
+
+    def get(self, name: str) -> S | Alias[S]:
+        with self._lock:
+            if name in self._symbols:
+                return self._symbols[name]
+            if name in self._aliases:
+                return self._aliases[name]
+
+            msg = f'No symbol or alias with name {name!r} found in the language'
+            raise ValueError(msg)
 
     def freeze(self) -> None:
         with self._lock:
