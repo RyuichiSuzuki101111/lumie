@@ -37,7 +37,9 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+    "ANN",
     "E",
+    "EM",
     "F",
     "W",
     "I",
@@ -47,11 +49,9 @@ select = [
     "ARG",
     "SIM",
     "RUF",
+    "TC",
 ]
-
-ignore = [
-    "E501",
-]
+ignore = ["E501", "F401"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["lumie"]
