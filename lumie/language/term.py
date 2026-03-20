@@ -45,7 +45,8 @@ class TermMixIn(Generic[S]):
         return Alias(name, self)
 
     def __eq__(self, other: object) -> bool:
-        raise NotImplementedError('Subclasses of TermMixIn must implement __eq__')
+        msg = 'Subclasses of TermMixIn must implement __eq__'
+        raise NotImplementedError(msg)
 
 
 class _CachedHash:
@@ -54,9 +55,8 @@ class _CachedHash:
     _hash: int | None
 
     def _compute_hash(self) -> int:
-        raise NotImplementedError(
-            'Subclasses of _CachedHash must implement _compute_hash'
-        )
+        msg = 'Subclasses of _CachedHash must implement _compute_hash'
+        raise NotImplementedError(msg)
 
     def __hash__(self) -> int:
         if self._hash is None:
@@ -89,7 +89,7 @@ class Mul(Generic[S], TermMixIn[S], _CachedHash):
     rhs: Term[S]
     _hash: int | None = field(init=False, repr=False, default=None)
 
-    def _compute_hash(self):
+    def _compute_hash(self) -> int:
         return hash((type(self), self.lhs, self.rhs))
 
     def __eq__(self, other: object) -> bool:
@@ -106,7 +106,7 @@ class Div(Generic[S], TermMixIn[S], _CachedHash):
     rhs: Term[S]
     _hash: int | None = field(init=False, repr=False, default=None)
 
-    def _compute_hash(self):
+    def _compute_hash(self) -> int:
         return hash((type(self), self.lhs, self.rhs))
 
     def __eq__(self, other: object) -> bool:
@@ -124,7 +124,7 @@ class Pow(Generic[S], TermMixIn[S], _CachedHash):
     exponent_den: int = 1
     _hash: int | None = field(init=False, repr=False, default=None)
 
-    def _compute_hash(self):
+    def _compute_hash(self) -> int:
         return hash((type(self), self.base, self.exponent_num, self.exponent_den))
 
     def __eq__(self, other: object) -> bool:
