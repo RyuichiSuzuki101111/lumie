@@ -121,4 +121,4 @@ class Alias(Generic[S], TermMixIn[S]):
         return self.name
 
     def __repr__(self) -> str:
-        return f'Alias(name={self.name!r}, target={self.target!r})'
+        return f'{type(self).__name__}(name={self.name!r}, target={self.target!r})'
