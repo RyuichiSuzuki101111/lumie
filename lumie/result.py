@@ -1,7 +1,16 @@
 # lumie/result.py
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    NoReturn,
+    Protocol,
+    TypeVar,
+    cast,
+    overload,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -39,7 +48,7 @@ class Result(Protocol[R_co, E_co]):
     def map_err(self, func: Callable[[E_co], T]) -> Result[R_co, T]: ...
 
 
-class Ok(Result[R, Any]):
+class Ok(Generic[R]):
     def __init__(self, value: R) -> None:
         self._value = value
 
@@ -55,7 +64,7 @@ class Ok(Result[R, Any]):
     @overload
     def unwrap(self, default: T) -> R | T: ...
 
-    def unwrap(self, default: T | _Missing = MISSING) -> R:  # noqa: ARG002
+    def unwrap(self, default: T | _Missing = MISSING) -> R | T:  # noqa: ARG002
         return self._value
 
     @overload
@@ -71,13 +80,13 @@ class Ok(Result[R, Any]):
         return default
 
     def map(self, func: Callable[[R], T]) -> Result[T, Any]:
-        return Ok(func(self._value))
+        return cast('Result[T, Any]', Ok(func(self._value)))
 
     def map_err(self, func: Callable[[Any], T]) -> Result[R, T]:  # noqa: ARG002
         return cast('Result[R, T]', self)
 
 
-class Err(Result[Any, E]):
+class Err(Generic[E]):
     def __init__(self, error: E) -> None:
         self._error = error
 
@@ -111,4 +120,4 @@ class Err(Result[Any, E]):
         return cast('Result[T, E]', self)
 
     def map_err(self, func: Callable[[E], T]) -> Result[Any, T]:
-        return Err(func(self._error))
+        return cast('Result[Any, T]', Err(func(self._error)))
