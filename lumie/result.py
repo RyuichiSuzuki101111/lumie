@@ -1,123 +1,179 @@
 # lumie/result.py
 from __future__ import annotations
 
+from enum import Enum, auto
 from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    NoReturn,
+    Literal,
     Protocol,
     TypeVar,
     cast,
+    final,
     overload,
+    override,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 R_co = TypeVar('R_co', covariant=True)
-E_co = TypeVar('E_co', covariant=True)
 R = TypeVar('R')
 E = TypeVar('E')
+F = TypeVar('F')
 T = TypeVar('T')
-
-
-class _Missing:
-    """A sentinel value to indicate that a value was not provided. This is used to distinguish between a value that was explicitly provided as None and a value that was not provided at all."""
-
-
-MISSING = _Missing()
 
 
 class UnwrapError(Exception):
     """An error raised when trying to unwrap a Result that is an Err, or unwrap_err a Result that is an Ok."""
 
 
-class Result(Protocol[R_co, E_co]):
-    def is_ok(self) -> bool: ...
-    def is_err(self) -> bool: ...
-    @overload
-    def unwrap(self) -> R_co: ...
-    @overload
-    def unwrap(self, default: T) -> R_co | T: ...
-    @overload
-    def unwrap_err(self) -> E_co: ...
-    @overload
-    def unwrap_err(self, default: T) -> E_co | T: ...
-    def map(self, func: Callable[[R_co], T]) -> Result[T, E_co]: ...
-    def map_err(self, func: Callable[[E_co], T]) -> Result[R_co, T]: ...
-
-
 class Ok(Generic[R]):
-    def __init__(self, value: R) -> None:
-        self._value = value
+    # intended to be used in pattern matching, not to be instantiated directly. Use ok() function instead.
+    __match_args__ = ('_value',)
+    __slots__ = ('_value',)
+    _value: R
 
-    def is_ok(self) -> bool:
+    def __init__(self, value: R) -> None:  # noqa: ARG002
+        msg = 'Ok cannot be instantiated directly, use ok() instead'
+        raise TypeError(msg)
+
+    @property
+    def is_ok(self) -> Literal[True]:
         return True
 
-    def is_err(self) -> bool:
+    @property
+    def is_err(self) -> Literal[False]:
         return False
 
-    @overload
-    def unwrap(self) -> R: ...
-
-    @overload
-    def unwrap(self, default: T) -> R | T: ...
-
-    def unwrap(self, default: T | _Missing = MISSING) -> R | T:  # noqa: ARG002
+    def unwrap(self) -> R:
         return self._value
 
-    @overload
-    def unwrap_err(self) -> NoReturn: ...
-    @overload
-    def unwrap_err(self, default: T) -> T: ...
+    def unwrap_or(self, default: T) -> R | T:  # noqa: ARG002
+        return self._value
 
-    def unwrap_err(self, default: T | _Missing = MISSING) -> T:
-        if default is MISSING:
-            msg = 'No error in Ok result'
-            raise UnwrapError(msg)
-        assert not isinstance(default, _Missing)
-        return default
+    def unwrap_err(self) -> Any:  # noqa: ANN401
+        msg = f'Called unwrap_err on Ok: {self._value!r}'
+        raise UnwrapError(msg)
+
+    def and_then(self, func: Callable[[R], Result[T, E]]) -> Result[T, E]:
+        return func(self._value)
 
     def map(self, func: Callable[[R], T]) -> Result[T, Any]:
-        return cast('Result[T, Any]', Ok(func(self._value)))
+        return ok(func(self._value))
 
     def map_err(self, func: Callable[[Any], T]) -> Result[R, T]:  # noqa: ARG002
         return cast('Result[R, T]', self)
 
 
+@final
+class _Ok(Ok[R]):
+    __slots__ = ()
+
+    @override
+    def __init__(self, value: R) -> None:
+        self._value = value
+
+    def __str__(self) -> str:
+        return f'Ok({self._value})'
+
+    def __repr__(self) -> str:
+        return f'Ok({self._value!r})'
+
+
 class Err(Generic[E]):
+    __match_args__ = ('_error',)
+    __slots__ = ('_error',)
+    _error: E
+
+    def __init__(self, error: E) -> None:  # noqa: ARG002
+        msg = 'Err cannot be instantiated directly, use err() instead'
+        raise TypeError(msg)
+
+    @property
+    def is_ok(self) -> Literal[False]:
+        return False
+
+    @property
+    def is_err(self) -> Literal[True]:
+        return True
+
+    def unwrap(self) -> Any:  # noqa: ANN401
+        msg = f'Called unwrap on Err: {self._error!r}'
+        raise UnwrapError(msg)
+
+    def unwrap_or(self, default: T) -> T:
+        return default
+
+    def unwrap_err(self) -> E:
+        return self._error
+
+    def and_then(self, func: Callable[[Any], Result[T, E]]) -> Result[T, E]:  # noqa: ARG002
+        return err(self._error)
+
+    def map(self, func: Callable[[R], T]) -> Result[T, E]:  # noqa: ARG002
+        return cast('Result[T, E]', err(self._error))
+
+    def map_err(self, func: Callable[[E], F]) -> Result[Any, F]:
+        return err(func(self._error))
+
+
+@final
+class _Err(Err[E]):
+    __slots__ = ()
+
+    @override
     def __init__(self, error: E) -> None:
         self._error = error
 
-    def is_ok(self) -> bool:
-        return False
+    def __str__(self) -> str:
+        return f'Err({self._error})'
 
-    def is_err(self) -> bool:
-        return True
+    def __repr__(self) -> str:
+        return f'Err({self._error!r})'
 
-    @overload
-    def unwrap(self) -> NoReturn: ...
-    @overload
-    def unwrap(self, default: T) -> T: ...
 
-    def unwrap(self, default: T | _Missing = MISSING) -> T:
-        if default is MISSING:
-            msg = 'No result in Err result'
-            raise UnwrapError(msg)
-        assert not isinstance(default, _Missing)
-        return default
+class Result(Protocol[R_co, E]):
+    @property
+    def is_ok(self) -> bool: ...
+    @property
+    def is_err(self) -> bool: ...
 
-    @overload
+    def unwrap(self) -> R_co: ...
+    def unwrap_or(self, default: T) -> R_co | T: ...
     def unwrap_err(self) -> E: ...
-    @overload
-    def unwrap_err(self, default: T) -> E | T: ...
+    def and_then(self, func: Callable[[R_co], Result[T, E]]) -> Result[T, E]: ...
+    def map(self, func: Callable[[R_co], T]) -> Result[T, E]: ...
+    def map_err(self, func: Callable[[E], F]) -> Result[R_co, F]: ...
 
-    def unwrap_err(self, default: T | _Missing = MISSING) -> E | T:  # noqa: ARG002
-        return self._error
 
-    def map(self, func: Callable[[R], T]) -> Result[T, E]:  # noqa: ARG002
-        return cast('Result[T, E]', self)
+class _Missing(Enum):
+    MISSING = auto()
 
-    def map_err(self, func: Callable[[E], T]) -> Result[Any, T]:
-        return cast('Result[Any, T]', Err(func(self._error)))
+
+MISSING = _Missing.MISSING
+
+
+@overload
+def ok(value: R) -> Result[R, Any]: ...
+@overload
+def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
+def ok(value: R, *, err_type: type[E] | _Missing = MISSING) -> Result[R, Any]:  # noqa: ARG001
+    # err_type is only for type hinting purposes, it has no effect at runtime.
+    # It allows the caller to specify the error type of the Result when it cannot be inferred from the context, without affecting the actual behavior of the function.
+    return _Ok(value)
+
+
+@overload
+def err(error: E) -> Result[Any, E]: ...
+@overload
+def err(error: E, *, ok_type: type[R]) -> Result[R, E]: ...
+@overload
+def err(error: E, *, ok_type: None) -> Result[None, E]: ...
+
+
+def err(error: E, *, ok_type: type[R] | None | _Missing = MISSING) -> Result[Any, E]:  # noqa: ARG001
+    # ok_type is only for type hinting purposes, it has no effect at runtime.
+    # It allows the caller to specify the ok type of the Result when it cannot be inferred from the context, without affecting the actual behavior of the function.
+    return _Err(error)
