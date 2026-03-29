@@ -1,4 +1,16 @@
 # lumie/result.py
+"""
+A lightweight Result type for Python.
+
+Design principles:
+- Treat Result as a flow container, not a sum type to be pattern-matched eagerly.
+- Prefer chaining (map / and_then) over branching.
+- Ok / Err are exposed for pattern matching, but cannot be instantiated directly.
+- Type hints are best-effort and may use Any where strict typing would harm usability.
+
+Use ok(...) and err(...) to construct values.
+"""
+
 from __future__ import annotations
 
 from enum import Enum, auto
@@ -12,7 +24,6 @@ from typing import (
     cast,
     final,
     overload,
-    override,
 )
 
 if TYPE_CHECKING:
@@ -29,8 +40,18 @@ class UnwrapError(Exception):
     """An error raised when trying to unwrap a Result that is an Err, or unwrap_err a Result that is an Ok."""
 
 
+@final
 class Ok(Generic[R]):
-    # intended to be used in pattern matching, not to be instantiated directly. Use ok() function instead.
+    """
+    Represents a successful result.
+
+    This class is intended for pattern matching only:
+        match result:
+            case Ok(value): ...
+
+    Do not instantiate directly. Use ok(...) instead.
+    """
+
     __match_args__ = ('_value',)
     __slots__ = ('_value',)
     _value: R
@@ -38,6 +59,10 @@ class Ok(Generic[R]):
     def __init__(self, value: R) -> None:  # noqa: ARG002
         msg = 'Ok cannot be instantiated directly, use ok() instead'
         raise TypeError(msg)
+
+    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
+        msg = 'Ok instances are immutable'
+        raise AttributeError(msg)
 
     @property
     def is_ok(self) -> Literal[True]:
@@ -66,15 +91,6 @@ class Ok(Generic[R]):
     def map_err(self, func: Callable[[Any], T]) -> Result[R, T]:  # noqa: ARG002
         return cast('Result[R, T]', self)
 
-
-@final
-class _Ok(Ok[R]):
-    __slots__ = ()
-
-    @override
-    def __init__(self, value: R) -> None:
-        self._value = value
-
     def __str__(self) -> str:
         return f'Ok({self._value})'
 
@@ -82,7 +98,18 @@ class _Ok(Ok[R]):
         return f'Ok({self._value!r})'
 
 
+@final
 class Err(Generic[E]):
+    """
+    Represents a failed result.
+
+    This class is intended for pattern matching only:
+        match result:
+            case Err(error): ...
+
+    Do not instantiate directly. Use err(...) instead.
+    """
+
     __match_args__ = ('_error',)
     __slots__ = ('_error',)
     _error: E
@@ -90,6 +117,10 @@ class Err(Generic[E]):
     def __init__(self, error: E) -> None:  # noqa: ARG002
         msg = 'Err cannot be instantiated directly, use err() instead'
         raise TypeError(msg)
+
+    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
+        msg = 'Err instances are immutable'
+        raise AttributeError(msg)
 
     @property
     def is_ok(self) -> Literal[False]:
@@ -119,33 +150,45 @@ class Err(Generic[E]):
         return err(func(self._error))
 
 
-@final
-class _Err(Err[E]):
-    __slots__ = ()
-
-    @override
-    def __init__(self, error: E) -> None:
-        self._error = error
-
-    def __str__(self) -> str:
-        return f'Err({self._error})'
-
-    def __repr__(self) -> str:
-        return f'Err({self._error!r})'
-
-
 class Result(Protocol[R_co, E]):
+    """
+    A Result represents a computation that may succeed (Ok) or fail (Err).
+
+    The primary usage is chaining via:
+        - map       (transform success)
+        - and_then  (chain computations)
+        - map_err   (transform error)
+
+    Avoid branching on Ok/Err where possible; prefer chaining.
+    """
+
     @property
     def is_ok(self) -> bool: ...
     @property
     def is_err(self) -> bool: ...
 
-    def unwrap(self) -> R_co: ...
-    def unwrap_or(self, default: T) -> R_co | T: ...
-    def unwrap_err(self) -> E: ...
-    def and_then(self, func: Callable[[R_co], Result[T, E]]) -> Result[T, E]: ...
-    def map(self, func: Callable[[R_co], T]) -> Result[T, E]: ...
-    def map_err(self, func: Callable[[E], F]) -> Result[R_co, F]: ...
+    def unwrap(self) -> R_co:
+        """Return the success value or raise UnwrapError if this is an Err."""
+
+    def unwrap_or(self, default: T) -> R_co | T:
+        """Return the success value or default if this is an Err."""
+
+    def unwrap_err(self) -> E:
+        """Return the error or raise UnwrapError if this is an Ok."""
+
+    def and_then(self, func: Callable[[R_co], Result[T, E]]) -> Result[T, E]:
+        """
+        Chain computations that may fail.
+
+        The error type is preserved (E is not changed).
+        Use map_err to transform errors explicitly.
+        """
+
+    def map(self, func: Callable[[R_co], T]) -> Result[T, E]:
+        """Transform the success value, preserving the error."""
+
+    def map_err(self, func: Callable[[E], F]) -> Result[R_co, F]:
+        """Transform the error value, preserving the success."""
 
 
 class _Missing(Enum):
@@ -160,9 +203,16 @@ def ok(value: R) -> Result[R, Any]: ...
 @overload
 def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
 def ok(value: R, *, err_type: type[E] | _Missing = MISSING) -> Result[R, Any]:  # noqa: ARG001
-    # err_type is only for type hinting purposes, it has no effect at runtime.
-    # It allows the caller to specify the error type of the Result when it cannot be inferred from the context, without affecting the actual behavior of the function.
-    return _Ok(value)
+    """
+    Construct a successful Result.
+
+    err_type is only for type hinting and has no effect at runtime.
+    It can be used to specify the error type when it cannot be inferred.
+    """
+
+    instance = object.__new__(Ok)
+    object.__setattr__(instance, '_value', value)
+    return instance
 
 
 @overload
@@ -174,6 +224,15 @@ def err(error: E, *, ok_type: None) -> Result[None, E]: ...
 
 
 def err(error: E, *, ok_type: type[R] | None | _Missing = MISSING) -> Result[Any, E]:  # noqa: ARG001
-    # ok_type is only for type hinting purposes, it has no effect at runtime.
-    # It allows the caller to specify the ok type of the Result when it cannot be inferred from the context, without affecting the actual behavior of the function.
-    return _Err(error)
+    """
+    Construct a failed Result.
+
+    ok_type is only for type hinting and has no effect at runtime.
+    It can be used to specify the success type when it cannot be inferred.
+
+    Passing ok_type=None produces Result[None, E].
+    """
+
+    instance = object.__new__(Err)
+    object.__setattr__(instance, '_error', error)
+    return instance
