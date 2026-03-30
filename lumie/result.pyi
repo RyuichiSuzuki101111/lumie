@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Generic, Literal, Protocol, TypeVar, overload
+from typing import Any, Protocol, TypeVar, overload
 
 R_co = TypeVar('R_co', covariant=True)
 R = TypeVar('R')
@@ -13,38 +13,6 @@ T = TypeVar('T')
 
 class UnwrapError(Exception):
     pass
-
-class Ok(Generic[R]):
-    __match_args__ = ('_value',)
-    __slots__ = ('_value',)
-    _value: R
-
-    @property
-    def is_ok(self) -> Literal[True]: ...
-    @property
-    def is_err(self) -> Literal[False]: ...
-    def unwrap(self) -> R: ...
-    def unwrap_or(self, default: T) -> R | T: ...
-    def unwrap_err(self) -> Any: ...  # noqa: ANN401
-    def and_then(self, func: Callable[[R], Result[S, E]]) -> Result[S, E]: ...
-    def map(self, func: Callable[[R], S]) -> Result[S, Any]: ...
-    def map_err(self, func: Callable[[Any], F]) -> Result[R, F]: ...
-
-class Err(Generic[E]):
-    __match_args__ = ('_error',)
-    __slots__ = ('_error',)
-    _error: E
-
-    @property
-    def is_ok(self) -> Literal[False]: ...
-    @property
-    def is_err(self) -> Literal[True]: ...
-    def unwrap(self) -> Any: ...  # noqa: ANN401
-    def unwrap_or(self, default: T) -> T: ...
-    def unwrap_err(self) -> E: ...
-    def and_then(self, func: Callable[[Any], Result[S, E]]) -> Result[S, E]: ...
-    def map(self, func: Callable[[R], S]) -> Result[S, E]: ...
-    def map_err(self, func: Callable[[E], F]) -> Result[Any, F]: ...
 
 class Result(Protocol[R_co, E]):
     @property
@@ -57,6 +25,16 @@ class Result(Protocol[R_co, E]):
     def and_then(self, func: Callable[[R_co], Result[S, E]]) -> Result[S, E]: ...
     def map(self, func: Callable[[R_co], S]) -> Result[S, E]: ...
     def map_err(self, func: Callable[[E], F]) -> Result[R_co, F]: ...
+
+class Ok(Result[R, Any]):
+    __match_args__ = ('_value',)
+    __slots__ = ('_value',)
+    _value: R
+
+class Err(Result[Any, E]):
+    __match_args__ = ('_error',)
+    __slots__ = ('_error',)
+    _error: E
 
 @overload
 def ok(value: R) -> Result[R, Any]: ...
