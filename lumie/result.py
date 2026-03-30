@@ -38,6 +38,13 @@ F = TypeVar('F')
 T = TypeVar('T')
 
 
+class _Missing(Enum):
+    MISSING = auto()
+
+
+MISSING = _Missing.MISSING
+
+
 class UnwrapError(Exception):
     """Raised when unwrap() or unwrap_err() is called on the wrong Result variant."""
 
@@ -165,6 +172,22 @@ class Ok(Result[R, Any]):
         return ok, (self._value,)
 
 
+@overload
+def ok(value: R) -> Result[R, Any]: ...
+@overload
+def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
+def ok(value: R, *, err_type: type[E] | _Missing = MISSING) -> Result[R, Any]:  # noqa: ARG001
+    """
+    Construct a successful Result.
+
+    err_type is for type checking only and has no runtime effect.
+    """
+
+    instance = object.__new__(Ok)
+    object.__setattr__(instance, '_value', value)
+    return instance
+
+
 # Err is likewise not typed as Result[Never, E].
 # See the note above Ok for the rationale.
 @final
@@ -228,29 +251,6 @@ class Err(Result[Any, E]):
 
     def __reduce__(self) -> Any:  # noqa: ANN401
         return err, (self._error,)
-
-
-class _Missing(Enum):
-    MISSING = auto()
-
-
-MISSING = _Missing.MISSING
-
-
-@overload
-def ok(value: R) -> Result[R, Any]: ...
-@overload
-def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
-def ok(value: R, *, err_type: type[E] | _Missing = MISSING) -> Result[R, Any]:  # noqa: ARG001
-    """
-    Construct a successful Result.
-
-    err_type is for type checking only and has no runtime effect.
-    """
-
-    instance = object.__new__(Ok)
-    object.__setattr__(instance, '_value', value)
-    return instance
 
 
 @overload
