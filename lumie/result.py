@@ -27,7 +27,6 @@ from typing import (
     Literal,
     Protocol,
     TypeVar,
-    cast,
     final,
     overload,
 )
@@ -75,7 +74,8 @@ class Ok(Generic[R]):
         raise TypeError(msg)
 
     def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
-        raise AttributeError('Ok instances are immutable')
+        msg = 'Ok instances are immutable'
+        raise AttributeError(msg)
 
     @property
     def is_ok(self) -> Literal[True]:
@@ -120,13 +120,16 @@ class Ok(Generic[R]):
 
     def map_err(self, func: Callable[[Any], F]) -> Result[R, F]:  # noqa: ARG002
         """Preserve the success value without applying the error transform."""
-        return cast('Result[R, F]', self)
+        return ok(self._value)
 
     def __str__(self) -> str:
         return f'Ok({self._value})'
 
     def __repr__(self) -> str:
         return f'Ok({self._value!r})'
+
+    def __reduce__(self) -> Any:  # noqa: ANN401
+        return ok, (self._value,)
 
 
 @final
@@ -194,11 +197,20 @@ class Err(Generic[E]):
 
     def map(self, func: Callable[[R], S]) -> Result[S, E]:  # noqa: ARG002
         """Preserve the error without applying the success transform."""
-        return cast('Result[S, E]', err(self._error))
+        return err(self._error)
 
     def map_err(self, func: Callable[[E], F]) -> Result[Any, F]:
         """Transform the error value."""
         return err(func(self._error))
+
+    def __str__(self) -> str:
+        return f'Err({self._error})'
+
+    def __repr__(self) -> str:
+        return f'Err({self._error!r})'
+
+    def __reduce__(self) -> Any:  # noqa: ANN401
+        return err, (self._error,)
 
 
 class Result(Protocol[R_co, E]):
