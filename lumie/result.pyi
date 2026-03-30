@@ -31,15 +31,16 @@ class Ok(Result[R, Any]):
     __slots__ = ('_value',)
     _value: R
 
+@overload
+def ok(value: R) -> Result[R, Any]: ...
+@overload
+def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
+
 class Err(Result[Any, E]):
     __match_args__ = ('_error',)
     __slots__ = ('_error',)
     _error: E
 
-@overload
-def ok(value: R) -> Result[R, Any]: ...
-@overload
-def ok(value: R, *, err_type: type[E]) -> Result[R, E]: ...
 @overload
 def err(error: E) -> Result[Any, E]: ...
 @overload
