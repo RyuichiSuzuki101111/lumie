@@ -20,16 +20,7 @@ Use ok(...) and err(...) to construct values.
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    Literal,
-    Protocol,
-    TypeVar,
-    final,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, final, overload
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -49,168 +40,6 @@ T = TypeVar('T')
 
 class UnwrapError(Exception):
     """Raised when unwrap() or unwrap_err() is called on the wrong Result variant."""
-
-
-@final
-class Ok(Generic[R]):
-    """
-    The successful variant of Result.
-
-    This class is primarily used for pattern matching:
-
-        match result:
-            case Ok(value): ...
-
-    Instances are constructed via ok(...), not by calling Ok directly.
-    Prefer using the Result interface for operations.
-    """
-
-    __match_args__ = ('_value',)
-    __slots__ = ('_value',)
-    _value: R
-
-    def __init__(self, value: R) -> None:  # noqa: ARG002
-        msg = 'Ok cannot be instantiated directly, use ok() instead'
-        raise TypeError(msg)
-
-    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
-        msg = 'Ok instances are immutable'
-        raise AttributeError(msg)
-
-    @property
-    def is_ok(self) -> Literal[True]:
-        """
-        Return True if this Result is Ok.
-
-        This is a runtime guard for operations such as unwrap().
-        It is not intended as a type narrowing mechanism.
-        """
-        return True
-
-    @property
-    def is_err(self) -> Literal[False]:
-        """
-        Return False if this Result is Ok.
-
-        This is a runtime guard for operations such as unwrap_err().
-        It is not intended as a type narrowing mechanism.
-        """
-        return False
-
-    def unwrap(self) -> R:
-        """Return the success value."""
-        return self._value
-
-    def unwrap_or(self, default: T) -> R | T:  # noqa: ARG002
-        """Return the success value, ignoring the provided default."""
-        return self._value
-
-    def unwrap_err(self) -> Any:  # noqa: ANN401
-        """Raise UnwrapError because this Result is Ok."""
-        msg = f'Called unwrap_err on Ok: {self._value!r}'
-        raise UnwrapError(msg)
-
-    def and_then(self, func: Callable[[R], Result[S, E]]) -> Result[S, E]:
-        """Apply a Result-returning function to the success value."""
-        return func(self._value)
-
-    def map(self, func: Callable[[R], S]) -> Result[S, Any]:
-        """Transform the success value."""
-        return ok(func(self._value))
-
-    def map_err(self, func: Callable[[Any], F]) -> Result[R, F]:  # noqa: ARG002
-        """Preserve the success value without applying the error transform."""
-        return ok(self._value)
-
-    def __str__(self) -> str:
-        return f'Ok({self._value})'
-
-    def __repr__(self) -> str:
-        return f'Ok({self._value!r})'
-
-    def __reduce__(self) -> Any:  # noqa: ANN401
-        return ok, (self._value,)
-
-
-@final
-class Err(Generic[E]):
-    """
-    The error variant of Result.
-
-    This class is primarily used for pattern matching:
-
-        match result:
-            case Err(error): ...
-
-    Instances are constructed via err(...), not by calling Err directly.
-    Prefer using the Result interface for operations.
-    """
-
-    __match_args__ = ('_error',)
-    __slots__ = ('_error',)
-    _error: E
-
-    def __init__(self, error: E) -> None:  # noqa: ARG002
-        msg = 'Err cannot be instantiated directly, use err() instead'
-        raise TypeError(msg)
-
-    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
-        msg = 'Err instances are immutable'
-        raise AttributeError(msg)
-
-    @property
-    def is_ok(self) -> Literal[False]:
-        """
-        Return False if this Result is Err.
-
-        This is a runtime guard for operations such as unwrap().
-        It is not intended as a type narrowing mechanism.
-        """
-        return False
-
-    @property
-    def is_err(self) -> Literal[True]:
-        """
-        Return True if this Result is Err.
-
-        This is a runtime guard for operations such as unwrap_err().
-        It is not intended as a type narrowing mechanism.
-        """
-        return True
-
-    def unwrap(self) -> Any:  # noqa: ANN401
-        """Raise UnwrapError because this Result is Err."""
-        msg = f'Called unwrap on Err: {self._error!r}'
-        raise UnwrapError(msg)
-
-    def unwrap_or(self, default: T) -> T:
-        """Return the provided default."""
-        return default
-
-    def unwrap_err(self) -> E:
-        """Return the error value."""
-        return self._error
-
-    def and_then(self, func: Callable[[Any], Result[S, E]]) -> Result[S, E]:  # noqa: ARG002
-        """Preserve the error without applying the function."""
-        return err(self._error)
-
-    def map(self, func: Callable[[R], S]) -> Result[S, E]:  # noqa: ARG002
-        """Preserve the error without applying the success transform."""
-        return err(self._error)
-
-    def map_err(self, func: Callable[[E], F]) -> Result[Any, F]:
-        """Transform the error value."""
-        return err(func(self._error))
-
-    def __str__(self) -> str:
-        return f'Err({self._error})'
-
-    def __repr__(self) -> str:
-        return f'Err({self._error!r})'
-
-    def __reduce__(self) -> Any:  # noqa: ANN401
-        return err, (self._error,)
 
 
 class Result(Protocol[R_co, E]):
@@ -237,7 +66,7 @@ class Result(Protocol[R_co, E]):
         This property is a runtime guard for operations such as unwrap().
         It is not intended as a type narrowing mechanism.
 
-        When branching on Result values, prefer pattern matching on Ok / Err.
+        Pattern matching is the intended way to branch on Result values.
         """
 
     @property
@@ -248,7 +77,7 @@ class Result(Protocol[R_co, E]):
         This property is a runtime guard for operations such as unwrap_err().
         It is not intended as a type narrowing mechanism.
 
-        When branching on Result values, prefer pattern matching on Ok / Err.
+        Pattern matching is the intended way to branch on Result values.
         """
 
     def unwrap(self) -> R_co:
@@ -268,6 +97,137 @@ class Result(Protocol[R_co, E]):
 
     def map_err(self, func: Callable[[E], F]) -> Result[R_co, F]:
         """Transform the error value, preserving the success."""
+
+
+# Ok is not typed as Result[R, Never] on purpose.
+# While that would be more exact in isolation, it tends to worsen type
+# inference for `case Ok(value)` when matching on Result[R, E].
+@final
+class Ok(Result[R, Any]):
+    """
+    The successful variant of Result.
+
+    This class is primarily used for pattern matching:
+
+        match result:
+            case Ok(value): ...
+
+    Instances are constructed via ok(...), not by calling Ok directly.
+    Prefer using the Result interface for operations.
+    """
+
+    __match_args__ = ('_value',)
+    __slots__ = ('_value',)
+    _value: R
+
+    def __init__(self, value: R) -> None:  # noqa: ARG002
+        msg = 'Ok cannot be instantiated directly, use ok() instead'
+        raise TypeError(msg)
+
+    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
+        msg = 'Ok instances are immutable'
+        raise AttributeError(msg)
+
+    @property
+    def is_ok(self) -> Literal[True]:
+        return True
+
+    @property
+    def is_err(self) -> Literal[False]:
+        return False
+
+    def unwrap(self) -> R:
+        return self._value
+
+    def unwrap_or(self, default: T) -> R | T:  # noqa: ARG002
+        return self._value
+
+    def unwrap_err(self) -> Any:  # noqa: ANN401
+        msg = f'Called unwrap_err on Ok: {self._value!r}'
+        raise UnwrapError(msg)
+
+    def and_then(self, func: Callable[[R], Result[S, E]]) -> Result[S, E]:
+        return func(self._value)
+
+    def map(self, func: Callable[[R], S]) -> Result[S, Any]:
+        return ok(func(self._value))
+
+    def map_err(self, func: Callable[[Any], F]) -> Result[R, F]:  # noqa: ARG002
+        return ok(self._value)
+
+    def __str__(self) -> str:
+        return f'Ok({self._value})'
+
+    def __repr__(self) -> str:
+        return f'Ok({self._value!r})'
+
+    def __reduce__(self) -> Any:  # noqa: ANN401
+        return ok, (self._value,)
+
+
+# Err is likewise not typed as Result[Never, E].
+# See the note above Ok for the rationale.
+@final
+class Err(Result[Any, E]):
+    """
+    The error variant of Result.
+
+    This class is primarily used for pattern matching:
+
+        match result:
+            case Err(error): ...
+
+    Instances are constructed via err(...), not by calling Err directly.
+    Prefer using the Result interface for operations.
+    """
+
+    __match_args__ = ('_error',)
+    __slots__ = ('_error',)
+    _error: E
+
+    def __init__(self, error: E) -> None:  # noqa: ARG002
+        msg = 'Err cannot be instantiated directly, use err() instead'
+        raise TypeError(msg)
+
+    def __setattr__(self, key: str, value: Any) -> None:  # noqa: ANN401
+        msg = 'Err instances are immutable'
+        raise AttributeError(msg)
+
+    @property
+    def is_ok(self) -> Literal[False]:
+        return False
+
+    @property
+    def is_err(self) -> Literal[True]:
+        return True
+
+    def unwrap(self) -> Any:  # noqa: ANN401
+        msg = f'Called unwrap on Err: {self._error!r}'
+        raise UnwrapError(msg)
+
+    def unwrap_or(self, default: T) -> T:
+        return default
+
+    def unwrap_err(self) -> E:
+        return self._error
+
+    def and_then(self, func: Callable[[Any], Result[S, E]]) -> Result[S, E]:  # noqa: ARG002
+        return err(self._error)
+
+    def map(self, func: Callable[[R], S]) -> Result[S, E]:  # noqa: ARG002
+        return err(self._error)
+
+    def map_err(self, func: Callable[[E], F]) -> Result[Any, F]:
+        return err(func(self._error))
+
+    def __str__(self) -> str:
+        return f'Err({self._error})'
+
+    def __repr__(self) -> str:
+        return f'Err({self._error!r})'
+
+    def __reduce__(self) -> Any:  # noqa: ANN401
+        return err, (self._error,)
 
 
 class _Missing(Enum):
