@@ -8,7 +8,7 @@
 
 namespace lumie::math::overflow_arithmetic {
 
-template <typename T, typename... Tags> struct overflow_trait;
+template <typename T, typename Tag> struct overflow_trait;
 
 // A type models OverflowTrait if it provides a signed integral base_type and
 // checked arithmetic member functions that report overflow via bool.
