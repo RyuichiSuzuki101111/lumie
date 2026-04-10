@@ -11,72 +11,56 @@ namespace lumie::math::overflow_arithmetic {
 template <> struct overflow_trait<std::int16_t, portable::tag> {
   using base_type = std::int16_t;
   using wider_type = std::int32_t;
+  static constexpr wider_type BASE_TYPE_MIN =
+      static_cast<wider_type>(std::numeric_limits<base_type>::min());
+  static constexpr wider_type BASE_TYPE_MAX =
+      static_cast<wider_type>(std::numeric_limits<base_type>::max());
 
   [[nodiscard("overflow result must be checked")]]
   static bool add_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) + static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
   [[nodiscard("overflow result must be checked")]]
   static bool sub_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) - static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
   [[nodiscard("overflow result must be checked")]]
   static bool mul_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) * static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
 };
 
 template <> struct overflow_trait<std::int32_t, portable::tag> {
   using base_type = std::int32_t;
   using wider_type = std::int64_t;
+  static constexpr wider_type BASE_TYPE_MIN =
+      static_cast<wider_type>(std::numeric_limits<base_type>::min());
+  static constexpr wider_type BASE_TYPE_MAX =
+      static_cast<wider_type>(std::numeric_limits<base_type>::max());
 
   [[nodiscard("overflow result must be checked")]]
   static bool add_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) + static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
   [[nodiscard("overflow result must be checked")]]
   static bool sub_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) - static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
   [[nodiscard("overflow result must be checked")]]
   static bool mul_overflow(base_type a, base_type b, base_type *result) {
     wider_type temp = static_cast<wider_type>(a) * static_cast<wider_type>(b);
-    if (temp > static_cast<wider_type>(std::numeric_limits<base_type>::max()) ||
-        temp < static_cast<wider_type>(std::numeric_limits<base_type>::min())) {
-      return true;
-    }
     *result = static_cast<base_type>(temp);
-    return false;
+    return (temp > BASE_TYPE_MAX || temp < BASE_TYPE_MIN);
   }
 };
 
