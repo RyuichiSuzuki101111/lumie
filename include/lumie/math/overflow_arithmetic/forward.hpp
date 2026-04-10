@@ -26,6 +26,10 @@ concept OverflowTrait = std::is_integral_v<T> && std::is_signed_v<T> &&
                           } -> std::same_as<bool>;
                         };
 
+namespace portable {
+struct tag {};
+} // namespace portable
+
 namespace gnu {
 struct tag {};
 } // namespace gnu
@@ -33,10 +37,6 @@ struct tag {};
 namespace msvc {
 struct experimental_tag {};
 } // namespace msvc
-
-namespace fallback {
-struct tag {};
-} // namespace fallback
 
 #if defined(__GNUC__) || defined(__clang__)
 template <typename T>
@@ -49,7 +49,7 @@ template <> struct overflow_trait<std::int16_t, msvc::experimental_tag>;
 template <> struct overflow_trait<std::int32_t, msvc::experimental_tag>;
 #endif
 
-template <> struct overflow_trait<std::int16_t, fallback::tag>;
-template <> struct overflow_trait<std::int32_t, fallback::tag>;
+template <> struct overflow_trait<std::int16_t, portable::tag>;
+template <> struct overflow_trait<std::int32_t, portable::tag>;
 
 } // namespace lumie::math::overflow_arithmetic
