@@ -1,4 +1,4 @@
-// lumie/math/overflow_arithmetic/fallback.hpp - Portable fallback overflow
+// lumie/math/overflow_arithmetic/portable.hpp - Portable fallback overflow
 // traits
 #pragma once
 
@@ -8,7 +8,7 @@
 
 namespace lumie::math::overflow_arithmetic {
 
-template <> struct overflow_trait<std::int16_t, fallback::tag> {
+template <> struct overflow_trait<std::int16_t, portable::tag> {
   using base_type = std::int16_t;
   using wider_type = std::int32_t;
 
@@ -44,7 +44,7 @@ template <> struct overflow_trait<std::int16_t, fallback::tag> {
   }
 };
 
-template <> struct overflow_trait<std::int32_t, fallback::tag> {
+template <> struct overflow_trait<std::int32_t, portable::tag> {
   using base_type = std::int32_t;
   using wider_type = std::int64_t;
 
@@ -81,8 +81,8 @@ template <> struct overflow_trait<std::int32_t, fallback::tag> {
 };
 
 static_assert(
-    OverflowTrait<overflow_trait<std::int16_t, fallback::tag>, std::int16_t>);
+    OverflowTrait<overflow_trait<std::int16_t, portable::tag>, std::int16_t>);
 static_assert(
-    OverflowTrait<overflow_trait<std::int32_t, fallback::tag>, std::int32_t>);
+    OverflowTrait<overflow_trait<std::int32_t, portable::tag>, std::int32_t>);
 
 } // namespace lumie::math::overflow_arithmetic
