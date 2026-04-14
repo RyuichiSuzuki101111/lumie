@@ -4,6 +4,7 @@
 
 #include "forward.hpp"
 #include "portable.hpp"
+#include "utility.hpp"
 
 #if (defined(__GNUC__) || defined(__clang__)) &&                               \
     defined(LUMIE_PREFER_COMPILER_OVERFLOW_BACKEND)
