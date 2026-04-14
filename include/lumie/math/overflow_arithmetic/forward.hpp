@@ -1,7 +1,7 @@
 // lumie/math/overflow_arithmetic/forward.hpp - Forward declarations for
 // overflow traits
-
 #pragma once
+
 #include <concepts>    // for std::same_as
 #include <cstdint>     // for fixed-width integer types
 #include <type_traits> // for std::is_integral_v, std::is_signed_v
